@@ -1,24 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {createContext, useReducer} from 'react';
 import './App.css';
+import Client from "./pages/Client";
+import Login from "./pages/Login";
+import {ActionType, initialState, Reducer} from "./hooks/Reducer";
+
+export const AppContext = createContext(initialState);
 
 function App() {
+  const [state, dispatch] = useReducer(Reducer, initialState);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <AppContext.Provider value={state}>
+        {
+          state.token === "" ?
+            <Login setToken={(t) => dispatch({type: ActionType.SET_TOKEN, payload: t.toString()})}/> :
+            <Client />
+        }
+      </AppContext.Provider>
     </div>
   );
 }
