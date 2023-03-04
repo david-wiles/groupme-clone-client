@@ -1,19 +1,16 @@
-import React, {useEffect} from "react";
+import React from "react";
 
 import "./Sidebar.scss"
+import {RoomResponse} from "../CourierClient";
 
 interface SidebarProps {
+  rooms: Array<RoomResponse>
   onSelect: (id: string) => void
   isSidebarOpen: boolean
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function Sidebar(props: SidebarProps) {
-
-  useEffect(() => {
-    // Get rooms, register with courier client
-  });
-
   return (
     <header>
       <span className={props.isSidebarOpen ? "hamburger open" : "hamburger"}
@@ -21,27 +18,19 @@ export default function Sidebar(props: SidebarProps) {
         <i className="gg-menu"></i>
       </span>
       <ul className={props.isSidebarOpen ? "sidebar open" : "sidebar"}>
-        <li className={"noBullet roomSelect"}>
-          <button>
-            <span>
-              Room 1
-            </span>
-          </button>
-        </li>
-        <li className={"noBullet roomSelect"}>
-          <button>
-            <span>
-              Room 2
-            </span>
-          </button>
-        </li>
-        <li className={"noBullet roomSelect"}>
-          <button>
-            <span>
-              Room 3
-            </span>
-          </button>
-        </li>
+        {
+          props.rooms.map((room) => {
+            return (
+              <li className={"noBullet roomSelect"} key={room.id}>
+                <button>
+                  <span>
+                    {room.name}
+                  </span>
+                </button>
+              </li>
+            )
+          })
+        }
       </ul>
     </header>
   )

@@ -9,14 +9,41 @@ interface ClientAck {
 }
 
 interface ClientMessage {
-  payload: string
+  payload: string // payload may be encrypted, we will treat as a string
   cid: string
   acknowledge: boolean
 }
 
+export interface MessagePayload {
+  roomId: string
+  userId: string
+  timestamp: string
+  content: string
+}
+
+interface ListRoomResponse {
+  rooms: Array<RoomResponse>
+}
+
+export interface RoomResponse {
+  id: string
+  name: string
+  members: Array<string>
+}
+
+interface ListMessageResponse {
+  messages: Array<MessageResponse>
+}
+
+export interface MessageResponse {
+  userId: string
+  content: string
+  timestamp: string
+}
+
 export default class CourierClient {
   public domain: string = 'localhost';
-  public mailbox: Array<string> = [];
+  public mailboxes = new Map<string, (msg: MessagePayload) => void>();
 
   private readonly token: string;
   private connection?: WebSocket;
@@ -27,7 +54,7 @@ export default class CourierClient {
     this.connection = new WebSocket('ws://' + this.domain + ":8080");
 
     this.connection.addEventListener('open', () => {
-      // Authenticate
+      // Authenticate with JWT token
       this.connection?.send(token);
     });
 
@@ -41,15 +68,56 @@ export default class CourierClient {
     });
   }
 
+  onMessage(roomId: string, handler: (msg: MessagePayload) => void) {
+    this.mailboxes.set(roomId, handler);
+  }
+
   sendMessage(msg: string, room: string) {
 
+  }
+
+  async fetchRecentMessages(roomId: string): Promise<ListMessageResponse> {
+    const from = new Date("2012-12-12");
+    let resp = await fetch(`http://${this.domain}:9000/message?from=${from.toISOString()}&room=${roomId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + this.token
+      }
+    });
+
+    if (!resp.ok) {
+      console.error(resp);
+      return {
+        messages: []
+      };
+    }
+
+    return await resp.json();
+  }
+
+  async fetchRooms(): Promise<ListRoomResponse> {
+    let resp = await fetch("http://" + this.domain + ":9000/room", {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + this.token
+      }
+    });
+
+    if (!resp.ok) {
+      console.error(resp);
+      return {
+        rooms: []
+      };
+    }
+
+    return await resp.json();
   }
 
   private async handleRegister(message: WhoAmIResponse) {
     this.webhook = message.webhook;
 
     // Register webhook
-    const resp = await fetch(this.domain + ":9000/client/register", {
+    const resp = await fetch("http://" + this.domain + ":9000/client/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -67,8 +135,10 @@ export default class CourierClient {
   }
 
   private handleNotification(message: ClientMessage) {
-    // Add message to mailbox
-    this.mailbox.push(message.payload);
+    const payload: MessagePayload = JSON.parse(message.payload);
+
+    const handler = this.mailboxes.get(payload.roomId);
+    handler?.call(handler, payload);
 
     if (message.acknowledge) {
       // Send ClientAck

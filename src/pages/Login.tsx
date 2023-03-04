@@ -1,15 +1,17 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import Form from "../components/Form";
 
 interface LoginProps {
   setToken: (token: String) => void
+  setSelfId: (id: String) => void
 }
 
 export default function Login(props: LoginProps) {
   const handleResponse = async (resp: Response) => {
     if (resp.ok) {
       let body = await resp.json();
-      props.setToken(body.jwt);
+      props.setToken(body.token);
+      props.setSelfId(body.id);
     }
   };
 

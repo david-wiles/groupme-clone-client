@@ -1,23 +1,36 @@
-import React, {createContext, useReducer} from 'react';
+import React, {createContext, useState} from 'react';
 import './App.css';
 import Client from "./pages/Client";
 import Login from "./pages/Login";
-import {ActionType, initialState, Reducer} from "./hooks/Reducer";
+import CourierClient from "./CourierClient";
 
-export const AppContext = createContext(initialState);
+
+export interface Global {
+  courierClient?: CourierClient
+  selfId: string
+}
+
+export const GlobalContext = createContext<Global>({selfId:""});
 
 function App() {
-  const [state, dispatch] = useReducer(Reducer, initialState);
+  const token = window.localStorage.getItem("token");
+
+  const [courierClient, setCourierClient] = useState<CourierClient|undefined>(
+    token ? new CourierClient(token) : undefined
+  );
+  const [selfId, setSelfId] = useState<string>(window.localStorage.getItem("selfId") || "");
+
 
   return (
     <div className="App">
-      <AppContext.Provider value={state}>
+      <GlobalContext.Provider value={{courierClient, selfId}}>
         {
-          state.token === "" ?
-            <Login setToken={(t) => dispatch({type: ActionType.SET_TOKEN, payload: t.toString()})}/> :
-            <Client />
+          courierClient ?
+            <Client /> :
+            <Login setToken={(t) => setCourierClient(new CourierClient(t.toString()))}
+                   setSelfId={(id) => setSelfId(id.toString)}/>
         }
-      </AppContext.Provider>
+      </GlobalContext.Provider>
     </div>
   );
 }
