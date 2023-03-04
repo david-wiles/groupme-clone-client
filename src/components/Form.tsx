@@ -10,8 +10,10 @@ interface FormProps {
   className: string
   action: string
   method: string
-  inputs: Array<InputProps>
+  inputs: Array<InputProps>,
   afterSubmit: (resp: Response) => void
+  onSubmitError?: () => void
+  authToken?: string
 }
 
 interface InputProps {
@@ -19,7 +21,7 @@ interface InputProps {
   type: React.HTMLInputTypeAttribute
   name: string
   value: string
-  setValue: (v: string) => void
+  setValue?: (v: string) => void
 }
 
 // Generic form template
@@ -41,14 +43,14 @@ export default function Form(props: FormProps) {
 
   let inputs = props.inputs.map((input, i) => {
     return (
-      <div className={"form-group"} key={props.id + "-" + i}>
+      <div className={input.type === 'hidden' ? "form-group d-none" : "form-group"} key={props.id + "-" + i}>
         <label htmlFor="input">{input.displayName}</label>
         <input type={input.type}
                name={input.name}
                value={input.value}
                onChange={(e) => {
                  setStatus(NOT_SUBMITTED);
-                 input.setValue(e.target.value);
+                 input.setValue?.(e.target.value);
                }}
         />
       </div>
@@ -58,30 +60,34 @@ export default function Form(props: FormProps) {
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    let form: {[key: string]: string} = {};
+    let form: { [key: string]: string } = {};
 
     props.inputs.forEach((input) => {
       form[input.name] = input.value;
     });
 
+    let headers = {
+      "Content-Type": "application/json",
+    };
+
+    if (props.authToken) {
+      // @ts-ignore
+      headers["Authorization"] = "Bearer " + props.authToken;
+    }
+
     let resp = await fetch(props.action, {
       method: props.method,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers,
       body: JSON.stringify(form),
       mode: 'cors'
     });
 
     if (resp.ok) {
       setStatus(SUCCESS);
-      setStatusMessage("Successfully submitted form");
-
-      // Call afterSubmit with response
       props.afterSubmit(resp);
     } else {
       setStatus(FAILURE);
-      setStatusMessage("Could not submit form");
+      props.onSubmitError?.()
     }
   };
 

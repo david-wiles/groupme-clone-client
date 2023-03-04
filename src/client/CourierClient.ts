@@ -1,45 +1,12 @@
-type Message = WhoAmIResponse | ClientMessage
-
-interface WhoAmIResponse {
-  webhook: string
-}
-
-interface ClientAck {
-  cid: string
-}
-
-interface ClientMessage {
-  payload: string // payload may be encrypted, we will treat as a string
-  cid: string
-  acknowledge: boolean
-}
-
-export interface MessagePayload {
-  roomId: string
-  userId: string
-  timestamp: string
-  content: string
-}
-
-interface ListRoomResponse {
-  rooms: Array<RoomResponse>
-}
-
-export interface RoomResponse {
-  id: string
-  name: string
-  members: Array<string>
-}
-
-interface ListMessageResponse {
-  messages: Array<MessageResponse>
-}
-
-export interface MessageResponse {
-  userId: string
-  content: string
-  timestamp: string
-}
+import {
+  ClientAck,
+  ClientMessage,
+  ListMessageResponse,
+  ListRoomResponse,
+  Message,
+  MessagePayload, MessageResponse,
+  WhoAmIResponse
+} from "./messages";
 
 export default class CourierClient {
   public domain: string = 'localhost';
@@ -70,10 +37,6 @@ export default class CourierClient {
 
   onMessage(roomId: string, handler: (msg: MessagePayload) => void) {
     this.mailboxes.set(roomId, handler);
-  }
-
-  sendMessage(msg: string, room: string) {
-
   }
 
   async fetchRecentMessages(roomId: string): Promise<ListMessageResponse> {
@@ -113,6 +76,11 @@ export default class CourierClient {
     return await resp.json();
   }
 
+  triggerMessage(payload: MessagePayload) {
+    const handler = this.mailboxes.get(payload.roomId);
+    handler?.call(handler, payload);
+  }
+
   private async handleRegister(message: WhoAmIResponse) {
     this.webhook = message.webhook;
 
@@ -135,15 +103,19 @@ export default class CourierClient {
   }
 
   private handleNotification(message: ClientMessage) {
-    const payload: MessagePayload = JSON.parse(message.payload);
+    const payload: MessagePayload = JSON.parse(this.decodeBytes(message.payload));
 
-    const handler = this.mailboxes.get(payload.roomId);
-    handler?.call(handler, payload);
+    this.triggerMessage(payload);
 
     if (message.acknowledge) {
       // Send ClientAck
       const ack: ClientAck = {cid: message.cid};
       this.connection?.send(JSON.stringify(ack));
     }
+  }
+
+  // TODO decode base64 to unicode
+  private decodeBytes(content: string): string {
+    return atob(content)
   }
 }

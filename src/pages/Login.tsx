@@ -1,17 +1,15 @@
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import Form from "../components/Form";
+import {AuthResponse} from "../client/messages";
+import {useAuth} from "../hooks/useAuth";
 
-interface LoginProps {
-  setToken: (token: String) => void
-  setSelfId: (id: String) => void
-}
+export default function Login() {
+  const {login} = useAuth();
 
-export default function Login(props: LoginProps) {
   const handleResponse = async (resp: Response) => {
     if (resp.ok) {
-      let body = await resp.json();
-      props.setToken(body.token);
-      props.setSelfId(body.id);
+      let body: AuthResponse = await resp.json();
+      await login(body)
     }
   };
 
