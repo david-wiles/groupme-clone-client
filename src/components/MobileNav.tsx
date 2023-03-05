@@ -8,7 +8,7 @@ export default function MobileNav() {
       <h1>Page Title</h1>
       <nav className={"mobile-nav"}>
         {
-          location.pathname !== '/rooms' ?
+          location.pathname !== '/' ?
             // eslint-disable-next-line no-restricted-globals
             <button onClick={() => history.back()}>
               <i className={"gg-arrow-left"}></i>

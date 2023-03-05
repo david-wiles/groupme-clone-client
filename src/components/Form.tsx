@@ -84,7 +84,7 @@ export default function Form(props: FormProps) {
 
     if (resp.ok) {
       setStatus(SUCCESS);
-      props.afterSubmit(resp);
+      await props.afterSubmit(resp);
     } else {
       setStatus(FAILURE);
       props.onSubmitError?.()

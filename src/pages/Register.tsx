@@ -1,10 +1,9 @@
+import {useAuth} from "../hooks/useAuth";
+import {AuthResponse} from "../client/messages";
 import {useState} from "react";
 import Form from "../components/Form";
-import {AuthResponse} from "../client/messages";
-import {useAuth} from "../hooks/useAuth";
-import {Link} from "react-router-dom";
 
-export default function Login() {
+export default function Register() {
   const {login} = useAuth();
 
   const handleResponse = async (resp: Response) => {
@@ -16,13 +15,14 @@ export default function Login() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
 
   return (
     <div className="login-form">
-      <Form id={"login-form"}
+      <Form id={"register-form"}
             className={"login-form"}
             method="POST"
-            action="http://localhost:9000/account/login"
+            action="http://localhost:9000/account"
             inputs={[
               {
                 displayName: "username",
@@ -37,15 +37,17 @@ export default function Login() {
                 type: "password",
                 value: password,
                 setValue: setPassword,
+              },
+              {
+                displayName: "email",
+                name: "email",
+                type: "email",
+                value: email,
+                setValue: setEmail
               }
             ]}
             afterSubmit={handleResponse}
       />
-      <div className={"register-link"}>
-        <Link to="/register">
-          Create Account
-        </Link>
-      </div>
     </div>
   );
 }

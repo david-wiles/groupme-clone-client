@@ -16,6 +16,9 @@ export default class CourierClient {
   private connection?: WebSocket;
   private webhook?: string;
 
+  // Global state of all messages
+  private messages: Map<string, Array<MessageResponse>> = new Map<string, Array<MessageResponse>>();
+
   constructor(token: string) {
     this.token = token;
     this.connection = new WebSocket('ws://' + this.domain + ":8080");
@@ -39,7 +42,11 @@ export default class CourierClient {
     this.mailboxes.set(roomId, handler);
   }
 
-  async fetchRecentMessages(roomId: string): Promise<ListMessageResponse> {
+  async fetchRecentMessages(roomId: string): Promise<Array<MessageResponse>> {
+    if (this.messages.has(roomId)) {
+      return this.messages.get(roomId) || [];
+    }
+
     const from = new Date("2012-12-12");
     let resp = await fetch(`http://${this.domain}:9000/message?from=${from.toISOString()}&room=${roomId}`, {
       headers: {
@@ -50,12 +57,12 @@ export default class CourierClient {
 
     if (!resp.ok) {
       console.error(resp);
-      return {
-        messages: []
-      };
+      return [];
     }
 
-    return await resp.json();
+    const body: ListMessageResponse = await resp.json();
+
+    return this.prependMessages(roomId, body.messages);
   }
 
   async fetchRooms(): Promise<ListRoomResponse> {
@@ -107,6 +114,12 @@ export default class CourierClient {
 
     this.triggerMessage(payload);
 
+    const currentMessages = this.prependMessages(payload.roomId, [{
+      userId: payload.userId,
+      timestamp: payload.timestamp,
+      content: payload.content
+    }])
+
     if (message.acknowledge) {
       // Send ClientAck
       const ack: ClientAck = {cid: message.cid};
@@ -117,5 +130,11 @@ export default class CourierClient {
   // TODO decode base64 to unicode
   private decodeBytes(content: string): string {
     return atob(content)
+  }
+
+  private prependMessages(roomId: string, messages: Array<MessageResponse>): Array<MessageResponse> {
+    const currentMessages = messages.concat(this.messages.get(roomId) || []);
+    this.messages.set(roomId, currentMessages);
+    return currentMessages;
   }
 }

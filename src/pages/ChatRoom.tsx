@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useParams} from 'react-router-dom';
 import {useClient} from "../hooks/useClient";
 import ChatMessages from "../components/ChatMessages";
@@ -15,7 +15,7 @@ export default function ChatRoom() {
 
   const messagesEndRef: React.Ref<any> = useRef(null);
 
-  const scrollToBottom = (opts?: ScrollIntoViewOptions) => messagesEndRef.current.scrollIntoView(opts);
+  const scrollToBottom = (opts?: ScrollIntoViewOptions) => messagesEndRef.current?.scrollIntoView(opts);
 
   const handleResponse = async (resp: Response) => {
     if (resp.status < 300) {

@@ -1,16 +1,17 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ListMessageResponse, MessagePayload, MessageResponse} from "../client/messages";
 import {useParams} from 'react-router-dom';
 import {useClient} from "../hooks/useClient";
 import {useAuth} from "../hooks/useAuth";
+import {useSubsequentEffect} from "../hooks/useSubsequentEffect";
 
 interface ChatMessagesProps {
   scrollToBottom: (opts?: ScrollIntoViewOptions) => void
 }
 
 export default function ChatMessages({scrollToBottom}: ChatMessagesProps) {
-  const [messages, setMessages] = useState(new Array<MessageResponse>());
   const {courier} = useClient();
+  const [messages, setMessages] = useState(new Array<MessageResponse>());
   const {auth} = useAuth();
   const {id} = useParams();
 
@@ -30,13 +31,12 @@ export default function ChatMessages({scrollToBottom}: ChatMessagesProps) {
   });
 
   useEffect(() => {
-    // Request last few messages, scroll to bottom
-    courier.fetchRecentMessages(roomId)
-      .then((response: ListMessageResponse) => {
-        setMessages(response.messages.reverse());
-        scrollToBottom();
-      });
-  }, []);
+    courier.fetchRecentMessages(roomId).then((messages: Array<MessageResponse>) => {
+      setMessages(messages.reverse());
+    });
+  }, [roomId]);
+
+  useSubsequentEffect(() => scrollToBottom(), [messages.length]);
 
   return (
     <>
