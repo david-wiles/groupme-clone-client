@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ListMessageResponse, MessagePayload, MessageResponse} from "../client/messages";
+import {ListMessageResponse, MessageResponse} from "../client/messages";
 import {useParams} from 'react-router-dom';
 import {useClient} from "../hooks/useClient";
 import {useAuth} from "../hooks/useAuth";
@@ -17,16 +17,8 @@ export default function ChatMessages({scrollToBottom}: ChatMessagesProps) {
 
   const roomId = id || "";
 
-  courier.onMessage(roomId, (msg: MessagePayload) => {
-    setMessages((messages) => {
-      return messages.concat([
-        {
-          userId: msg.userId,
-          content: msg.content,
-          timestamp: msg.timestamp
-        }
-      ]);
-    });
+  courier.onMessage(roomId, (msg: MessageResponse) => {
+    setMessages((messages) => messages.concat(msg));
     scrollToBottom({behavior: "smooth"});
   });
 

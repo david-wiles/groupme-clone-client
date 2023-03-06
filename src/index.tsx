@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from "react-router-dom";
 import {AuthProvider} from "./hooks/useAuth";
 import {ClientProvider} from "./hooks/useClient";
+import {RoomProvider} from "./hooks/useRooms";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,7 +15,9 @@ root.render(
   <BrowserRouter>
     <AuthProvider>
       <ClientProvider>
-        <App />
+        <RoomProvider>
+          <App />
+        </RoomProvider>
       </ClientProvider>
     </AuthProvider>
   </BrowserRouter>

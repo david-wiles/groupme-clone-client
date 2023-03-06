@@ -1,29 +1,31 @@
 import {useNavigate, useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
-import {useAuth} from "../hooks/useAuth";
+import {useClient} from "../hooks/useClient";
+import {useRooms} from "../hooks/useRooms";
+import {RoomResponse} from "../client/messages";
 
 export default function JoinRoom() {
   const navigate = useNavigate();
-  const {auth} = useAuth();
+  const {courier} = useClient();
   const {id} = useParams();
+  const {addRoom} = useRooms();
 
   const [status, setStatus] = useState<string>("Joining room...");
 
   useEffect(() => {
-    fetch(`http://localhost:9000/room/${id}/join`, {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + auth.token
-      }
-    })
+    courier.fetch("POST", `/room/${id}/join`)
       .then((resp) => {
         if (resp.ok) {
-          navigate(`/room/${id}`)
+          return resp.json()
         } else {
           setStatus("Unable to join room. Check the join link and try again.");
         }
       })
-  });
+      .then((body: RoomResponse) => {
+        addRoom(body)
+        navigate(`/room/${id}`)
+      })
+  }, []);
 
   return (
     <div>

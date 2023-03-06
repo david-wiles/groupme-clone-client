@@ -22,7 +22,7 @@ export default function NewRoom() {
   return (
     <Form id={"new-room"}
           className={"new-room-form"}
-          action={"http://localhost:9000/room"}
+          action={"/room"}
           method={"POST"}
           inputs={[
             {

@@ -1,12 +1,12 @@
 import {useClient} from "../hooks/useClient";
 import {useEffect, useState} from "react";
-import {RoomResponse} from "../client/messages";
 import {Link} from "react-router-dom";
+import {useRooms} from "../hooks/useRooms";
 
 export default function RoomList() {
   const {courier} = useClient();
+  const {rooms, setRooms} = useRooms();
 
-  const [rooms, setRooms] = useState<Array<RoomResponse>>([]);
   const [filter, setFilter] = useState<string>("");
 
   useEffect(() => {

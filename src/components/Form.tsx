@@ -75,7 +75,7 @@ export default function Form(props: FormProps) {
       headers["Authorization"] = "Bearer " + props.authToken;
     }
 
-    let resp = await fetch(props.action, {
+    let resp = await fetch(`${process.env.REACT_APP_API_DOMAIN}${props.action}`, {
       method: props.method,
       headers: headers,
       body: JSON.stringify(form),

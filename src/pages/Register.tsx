@@ -22,7 +22,7 @@ export default function Register() {
       <Form id={"register-form"}
             className={"login-form"}
             method="POST"
-            action="http://localhost:9000/account"
+            action="/account"
             inputs={[
               {
                 displayName: "username",

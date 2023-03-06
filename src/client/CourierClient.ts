@@ -4,13 +4,12 @@ import {
   ListMessageResponse,
   ListRoomResponse,
   Message,
-  MessagePayload, MessageResponse,
+  MessageResponse,
   WhoAmIResponse
 } from "./messages";
 
 export default class CourierClient {
-  public domain: string = 'localhost';
-  public mailboxes = new Map<string, (msg: MessagePayload) => void>();
+  public mailboxes = new Map<string, (msg: MessageResponse) => void>();
 
   private readonly token: string;
   private connection?: WebSocket;
@@ -21,7 +20,8 @@ export default class CourierClient {
 
   constructor(token: string) {
     this.token = token;
-    this.connection = new WebSocket('ws://' + this.domain + ":8080");
+    // @ts-ignore
+    this.connection = new WebSocket(process.env.REACT_APP_WS_DOMAIN);
 
     this.connection.addEventListener('open', () => {
       // Authenticate with JWT token
@@ -38,7 +38,23 @@ export default class CourierClient {
     });
   }
 
-  onMessage(roomId: string, handler: (msg: MessagePayload) => void) {
+  async fetch(method: string, location: string, body?: string): Promise<Response> {
+    let opts: RequestInit = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + this.token
+      }
+    };
+
+    if (body) {
+      opts.body = body;
+    }
+
+    return await fetch(`${process.env.REACT_APP_API_DOMAIN}${location}`, opts);
+  }
+
+  onMessage(roomId: string, handler: (msg: MessageResponse) => void) {
     this.mailboxes.set(roomId, handler);
   }
 
@@ -48,12 +64,7 @@ export default class CourierClient {
     }
 
     const from = new Date("2012-12-12");
-    let resp = await fetch(`http://${this.domain}:9000/message?from=${from.toISOString()}&room=${roomId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + this.token
-      }
-    });
+    let resp = await this.fetch("GET", `/message?from=${from.toISOString()}&room=${roomId}`);
 
     if (!resp.ok) {
       console.error(resp);
@@ -61,47 +72,32 @@ export default class CourierClient {
     }
 
     const body: ListMessageResponse = await resp.json();
-
-    return this.prependMessages(roomId, body.messages);
+    this.prependMessages(body.messages);
+    return this.messages.get(body.messages[0]?.roomId) || [];
   }
 
   async fetchRooms(): Promise<ListRoomResponse> {
-    let resp = await fetch("http://" + this.domain + ":9000/room", {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + this.token
-      }
-    });
+    let resp = await this.fetch("GET", "/room");
 
     if (!resp.ok) {
       console.error(resp);
-      return {
-        rooms: []
-      };
+      return {rooms: []};
     }
 
     return await resp.json();
   }
 
-  triggerMessage(payload: MessagePayload) {
+  triggerMessage(payload: MessageResponse) {
     const handler = this.mailboxes.get(payload.roomId);
     handler?.call(handler, payload);
+    this.prependMessages([payload])
   }
 
   private async handleRegister(message: WhoAmIResponse) {
     this.webhook = message.webhook;
 
     // Register webhook
-    const resp = await fetch("http://" + this.domain + ":9000/client/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + this.token
-      },
-      body: JSON.stringify({
-        clientUrl: this.webhook
-      })
-    });
+    const resp = await this.fetch("POST", "/client/register", JSON.stringify({clientUrl: this.webhook}));
 
     if (!resp.ok) {
       console.error(resp);
@@ -110,20 +106,12 @@ export default class CourierClient {
   }
 
   private handleNotification(message: ClientMessage) {
-    const payload: MessagePayload = JSON.parse(this.decodeBytes(message.payload));
+    const payload: MessageResponse = JSON.parse(this.decodeBytes(message.payload));
 
     this.triggerMessage(payload);
 
-    const currentMessages = this.prependMessages(payload.roomId, [{
-      userId: payload.userId,
-      timestamp: payload.timestamp,
-      content: payload.content
-    }])
-
     if (message.acknowledge) {
-      // Send ClientAck
-      const ack: ClientAck = {cid: message.cid};
-      this.connection?.send(JSON.stringify(ack));
+      this.connection?.send(JSON.stringify({cid: message.cid}));
     }
   }
 
@@ -132,9 +120,9 @@ export default class CourierClient {
     return atob(content)
   }
 
-  private prependMessages(roomId: string, messages: Array<MessageResponse>): Array<MessageResponse> {
-    const currentMessages = messages.concat(this.messages.get(roomId) || []);
-    this.messages.set(roomId, currentMessages);
-    return currentMessages;
+  private prependMessages(messages: Array<MessageResponse>) {
+    messages.forEach((message) => {
+      this.messages.set(messages[0].roomId, [message].concat(this.messages.get(message.roomId) || []));
+    });
   }
 }

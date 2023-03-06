@@ -14,13 +14,6 @@ export interface ClientMessage {
   acknowledge: boolean
 }
 
-export interface MessagePayload {
-  roomId: string
-  userId: string
-  timestamp: string
-  content: string
-}
-
 export interface ListRoomResponse {
   rooms: Array<RoomResponse>
 }
@@ -36,6 +29,7 @@ export interface ListMessageResponse {
 }
 
 export interface MessageResponse {
+  roomId: string
   userId: string
   content: string
   timestamp: string

@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
   // call this function when you want to authenticate the user
   const login = async (data: AuthResponse) => {
     setAuth(data);
-    navigate("/");
+    navigate("/rooms");
   };
 
   // call this function to sign out logged in user

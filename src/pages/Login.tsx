@@ -22,7 +22,7 @@ export default function Login() {
       <Form id={"login-form"}
             className={"login-form"}
             method="POST"
-            action="http://localhost:9000/account/login"
+            action="/account/login"
             inputs={[
               {
                 displayName: "username",

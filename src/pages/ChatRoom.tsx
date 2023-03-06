@@ -3,7 +3,7 @@ import {useParams} from 'react-router-dom';
 import {useClient} from "../hooks/useClient";
 import ChatMessages from "../components/ChatMessages";
 import Form from "../components/Form";
-import {MessagePayload} from "../client/messages";
+import {MessageResponse} from "../client/messages";
 import {useAuth} from "../hooks/useAuth";
 
 export default function ChatRoom() {
@@ -19,7 +19,7 @@ export default function ChatRoom() {
 
   const handleResponse = async (resp: Response) => {
     if (resp.status < 300) {
-      let body: MessagePayload = await resp.json()
+      let body: MessageResponse = await resp.json()
       courier.triggerMessage(body);
       setText("");
     }
@@ -31,7 +31,7 @@ export default function ChatRoom() {
       <div className={"text-container"}>
         <Form id={"message-input-" + id}
               className={"message-form"}
-              action={"http://localhost:9000/message"}
+              action={"/message"}
               method={"POST"}
               inputs={[
                 {
