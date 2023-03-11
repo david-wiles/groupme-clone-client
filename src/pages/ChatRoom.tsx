@@ -1,14 +1,12 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {useParams} from 'react-router-dom';
 import {useClient} from "../hooks/useClient";
 import ChatMessages from "../components/ChatMessages";
-import Form from "../components/Form";
-import {MessageResponse} from "../client/messages";
-import {useAuth} from "../hooks/useAuth";
+import Form, {FormRequestInput} from "../components/Form";
+import BaseLayout from "./BaseLayout";
 
 export default function ChatRoom() {
   const {courier} = useClient();
-  const {auth} = useAuth();
   const {id} = useParams();
 
   const [text, setText] = useState<string>("");
@@ -17,41 +15,44 @@ export default function ChatRoom() {
 
   const scrollToBottom = (opts?: ScrollIntoViewOptions) => messagesEndRef.current?.scrollIntoView(opts);
 
-  const handleResponse = async (resp: Response) => {
-    if (resp.status < 300) {
-      let body: MessageResponse = await resp.json()
-      courier.triggerMessage(body);
-      setText("");
-    }
+  const afterSubmit = async () => {
+    setText("");
   };
 
   return (
-    <div className={"Chat"}>
-      <ChatMessages scrollToBottom={scrollToBottom}/>
-      <div className={"text-container"}>
-        <Form id={"message-input-" + id}
-              className={"message-form"}
-              action={"/message"}
-              method={"POST"}
-              inputs={[
-                {
-                  displayName: "message",
-                  name: "message",
-                  type: "text",
-                  value: text,
-                  setValue: setText,
-                },
-                {
-                  displayName: "roomId",
-                  name: "roomId",
-                  type: "hidden",
-                  value: id || "",
+    <BaseLayout>
+      <div className={"Chat"}>
+        <ChatMessages scrollToBottom={scrollToBottom}/>
+        <div className={"text-container"}>
+          <Form id={"message-input-" + id}
+                className={"message-form"}
+                action={"/message"}
+                method={"POST"}
+                inputs={[
+                  {
+                    displayName: "message",
+                    name: "message",
+                    type: "text",
+                    value: text,
+                    setValue: setText,
+                  },
+                  {
+                    displayName: "roomId",
+                    name: "roomId",
+                    type: "hidden",
+                    value: id || "",
+                  }
+                ]}
+                submit={(form: FormRequestInput) => courier.messages.sendMessage({
+                  message: form['message'],
+                  roomId: form['roomId']
+                })
                 }
-              ]}
-              authToken={auth.token}
-              afterSubmit={handleResponse}/>
+                afterSubmit={afterSubmit}/>
+        </div>
+        <div ref={messagesEndRef}></div>
       </div>
-      <div ref={messagesEndRef}></div>
-    </div>
+    </BaseLayout>
+
   )
 }

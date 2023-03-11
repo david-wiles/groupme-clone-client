@@ -1,28 +1,29 @@
 import {useState} from "react";
-import Form from "../components/Form";
+import Form, {FormRequestInput} from "../components/Form";
 import {AuthResponse} from "../client/messages";
 import {useAuth} from "../hooks/useAuth";
 import {Link} from "react-router-dom";
+import {doRequest} from "../client/CourierClient";
 
 export default function Login() {
   const {login} = useAuth();
 
-  const handleResponse = async (resp: Response) => {
-    if (resp.ok) {
-      let body: AuthResponse = await resp.json();
-      await login(body)
-    }
+  const afterSubmit = async (resp: AuthResponse) => {
+    await login(resp)
   };
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const action = "/account/login";
+  const method = "POST";
+
   return (
     <div className="login-form">
       <Form id={"login-form"}
             className={"login-form"}
-            method="POST"
-            action="/account/login"
+            method={method}
+            action={action}
             inputs={[
               {
                 displayName: "username",
@@ -39,7 +40,18 @@ export default function Login() {
                 setValue: setPassword,
               }
             ]}
-            afterSubmit={handleResponse}
+            submit={async (form: FormRequestInput) => {
+              let resp = await doRequest(method, action, JSON.stringify({
+                username: form["username"],
+                password: form["password"]
+              }));
+              if (!resp.ok) {
+                throw new Error(resp.status.toString())
+              }
+              let body: AuthResponse = await resp.json();
+              return body;
+            }}
+            afterSubmit={afterSubmit}
       />
       <div className={"register-link"}>
         <Link to="/register">

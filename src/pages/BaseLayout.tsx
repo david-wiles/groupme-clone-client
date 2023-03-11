@@ -1,9 +1,9 @@
-import {Outlet} from "react-router-dom";
 import {ProtectedRoute} from "../components/ProtectedRoute";
 import RoomList from "../components/RoomList";
 import MobileNav from "../components/MobileNav";
 
-export default function Root() {
+// @ts-ignore
+export default function BaseLayout({children}) {
   return (
     <ProtectedRoute>
       <div className={"app-container"}>
@@ -17,7 +17,7 @@ export default function Root() {
           <MobileNav/>
         </div>
         <div id="detail">
-          <Outlet/>
+          {children}
         </div>
       </div>
     </ProtectedRoute>

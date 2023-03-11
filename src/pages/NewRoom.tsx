@@ -1,40 +1,41 @@
-import Form from "../components/Form";
+import Form, {FormRequestInput} from "../components/Form";
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {RoomResponse} from "../client/messages";
-import {useAuth} from "../hooks/useAuth";
+import {useClient} from "../hooks/useClient";
+import {useRooms} from "../hooks/useRooms";
+import BaseLayout from "./BaseLayout";
 
 export default function NewRoom() {
-
   const navigate = useNavigate();
 
-  const {auth} = useAuth();
-
+  const {courier} = useClient();
+  const {addRoom} = useRooms();
   const [name, setName] = useState<string>("");
 
-  const handleResponse = async (resp: Response) => {
-    if (resp.status < 300) {
-      const body: RoomResponse = await resp.json();
-      navigate(`/room/${body.id}`);
-    }
+  const afterSubmit = async (resp: RoomResponse) => {
+    addRoom(resp);
+    navigate(`/room/${resp.id}`);
   };
 
   return (
-    <Form id={"new-room"}
-          className={"new-room-form"}
-          action={"/room"}
-          method={"POST"}
-          inputs={[
-            {
-              displayName: "name",
-              name: "name",
-              type: "text",
-              value: name,
-              setValue: setName,
-            },
-          ]}
-          authToken={auth.token}
-          afterSubmit={handleResponse}
-    />
+    <BaseLayout>
+      <Form id={"new-room"}
+            className={"new-room-form"}
+            action={"/room"}
+            method={"POST"}
+            inputs={[
+              {
+                displayName: "name",
+                name: "name",
+                type: "text",
+                value: name,
+                setValue: setName,
+              },
+            ]}
+            submit={(form: FormRequestInput) => courier.rooms.create(form["name"])}
+            afterSubmit={afterSubmit}
+      />
+    </BaseLayout>
   )
 }

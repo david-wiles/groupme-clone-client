@@ -1,6 +1,6 @@
 import React from 'react';
 import {Route, Routes} from 'react-router-dom';
-import Root from "./pages/Root";
+import BaseLayout from "./pages/BaseLayout";
 import Login from "./pages/Login";
 import ChatRoom from "./pages/ChatRoom";
 import RoomListMobile from "./pages/RoomListMobile";
@@ -13,12 +13,10 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login/>}/>
       <Route path="/register" element={<Register/>}/>
-      <Route path="/" element={<Root/>}>
-        <Route path="/rooms" element={<RoomListMobile/>}/>
-        <Route path={"/room/new"} element={<NewRoom/>}/>
-        <Route path="/room/:id" element={<ChatRoom/>}/>
-        <Route path="/join/:id" element={<JoinRoom/>}/>
-      </Route>
+      <Route path="/" element={<RoomListMobile/>}/>
+      <Route path={"/room/new"} element={<NewRoom/>}/>
+      <Route path="/room/:id" element={<ChatRoom/>}/>
+      <Route path="/join/:id" element={<JoinRoom/>}/>
     </Routes>
   );
 }

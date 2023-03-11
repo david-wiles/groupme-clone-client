@@ -5,24 +5,27 @@ const SUBMITTED = 1;
 const SUCCESS = 2;
 const FAILURE = 3;
 
-interface FormProps {
+export type FormRequestInput = { [k: string]: string }
+
+interface FormProps<T> {
   id: string
   className: string
   action: string
   method: string
   inputs: Array<InputProps>,
-  afterSubmit: (resp: Response) => void
+  submit: (req: FormRequestInput) => Promise<T>
+  afterSubmit: (resp: T) => void
   onSubmitError?: () => void
-  authToken?: string
 }
 
-interface InputProps {
+export interface InputProps {
   displayName: string
   type: React.HTMLInputTypeAttribute
   name: string
   value: string
   setValue?: (v: string) => void
 }
+
 
 // Generic form template
 //
@@ -37,7 +40,7 @@ interface InputProps {
 //    value - the actual value of the text in the input
 //    onChange - function to execute on input change
 //  afterSubmit - hook to call upon a successful request (optional)
-export default function Form(props: FormProps) {
+export default function Form<T>(props: FormProps<T>) {
   const [status, setStatus] = useState(NOT_SUBMITTED);
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -57,37 +60,28 @@ export default function Form(props: FormProps) {
     );
   });
 
-  const handleSubmit: FormEventHandler<HTMLFormElement> = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    let form: { [key: string]: string } = {};
+  const serializeRequest = (): FormRequestInput => {
+    let form: FormRequestInput = {};
 
     props.inputs.forEach((input) => {
       form[input.name] = input.value;
     });
 
-    let headers = {
-      "Content-Type": "application/json",
-    };
+    return form;
+  }
 
-    if (props.authToken) {
-      // @ts-ignore
-      headers["Authorization"] = "Bearer " + props.authToken;
-    }
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    let resp = await fetch(`${process.env.REACT_APP_API_DOMAIN}${props.action}`, {
-      method: props.method,
-      headers: headers,
-      body: JSON.stringify(form),
-      mode: 'cors'
-    });
+    const req = serializeRequest();
 
-    if (resp.ok) {
+    try {
+      const resp = await props.submit(req);
       setStatus(SUCCESS);
       await props.afterSubmit(resp);
-    } else {
+    } catch (e) {
       setStatus(FAILURE);
-      props.onSubmitError?.()
+      props.onSubmitError?.();
     }
   };
 

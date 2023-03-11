@@ -8,6 +8,11 @@ export interface ClientAck {
   cid: string
 }
 
+export interface MessageRequest {
+  message: string
+  roomId: string
+}
+
 export interface ClientMessage {
   payload: string // payload may be encrypted, we will treat as a string
   cid: string
@@ -40,3 +45,7 @@ export interface AuthResponse {
   id: string
 }
 
+export interface AccountResponse {
+  id: string
+  username: string
+}

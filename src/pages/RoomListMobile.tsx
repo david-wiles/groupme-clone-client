@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import {RoomResponse} from "../client/messages";
 import {Link} from "react-router-dom";
 import DefaultRoom from "../components/DefaultRoom";
+import BaseLayout from "./BaseLayout";
 
 export default function RoomListMobile() {
   const {courier} = useClient();
@@ -10,11 +11,11 @@ export default function RoomListMobile() {
   const [rooms, setRooms] = useState<Array<RoomResponse>>([]);
 
   useEffect(() => {
-    courier.fetchRooms().then(resp => setRooms(resp.rooms));
+    courier.rooms.list().then(resp => setRooms(resp.rooms));
   }, [rooms.length]);
 
   return (
-    <>
+    <BaseLayout>
       <div className={"desktop-only"}>
         <DefaultRoom/>
       </div>
@@ -33,6 +34,6 @@ export default function RoomListMobile() {
           </ul>
         </nav>
       </div>
-    </>
+    </BaseLayout>
   );
 }

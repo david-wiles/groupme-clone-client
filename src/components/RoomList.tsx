@@ -10,7 +10,7 @@ export default function RoomList() {
   const [filter, setFilter] = useState<string>("");
 
   useEffect(() => {
-    courier.fetchRooms().then(resp => setRooms(resp.rooms));
+    courier.rooms.list().then(resp => setRooms(resp.rooms));
   }, []);
 
   return (

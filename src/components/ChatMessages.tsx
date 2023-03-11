@@ -17,13 +17,13 @@ export default function ChatMessages({scrollToBottom}: ChatMessagesProps) {
 
   const roomId = id || "";
 
-  courier.onMessage(roomId, (msg: MessageResponse) => {
+  courier.messages.onMessage(roomId, (msg: MessageResponse) => {
     setMessages((messages) => messages.concat(msg));
     scrollToBottom({behavior: "smooth"});
   });
 
   useEffect(() => {
-    courier.fetchRecentMessages(roomId).then((messages: Array<MessageResponse>) => {
+    courier.messages.fetchRecent(roomId).then((messages: Array<MessageResponse>) => {
       setMessages(messages.reverse());
     });
   }, [roomId]);

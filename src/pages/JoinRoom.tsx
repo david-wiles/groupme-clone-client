@@ -2,36 +2,34 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
 import {useClient} from "../hooks/useClient";
 import {useRooms} from "../hooks/useRooms";
-import {RoomResponse} from "../client/messages";
+import BaseLayout from "./BaseLayout";
 
 export default function JoinRoom() {
   const navigate = useNavigate();
   const {courier} = useClient();
   const {id} = useParams();
+
   const {addRoom} = useRooms();
 
   const [status, setStatus] = useState<string>("Joining room...");
 
   useEffect(() => {
-    courier.fetch("POST", `/room/${id}/join`)
-      .then((resp) => {
-        if (resp.ok) {
-          return resp.json()
-        } else {
-          setStatus("Unable to join room. Check the join link and try again.");
-        }
-      })
-      .then((body: RoomResponse) => {
-        addRoom(body)
-        navigate(`/room/${id}`)
-      })
+    if (id) {
+      courier.rooms.join(id)
+        .then((room) => {
+          addRoom(room);
+          navigate(`/room/${room.id}`)
+        })
+    }
   }, []);
 
   return (
-    <div>
-      <p>
-        {status}
-      </p>
-    </div>
+    <BaseLayout>
+      <div>
+        <p>
+          {status}
+        </p>
+      </div>
+    </BaseLayout>
   );
 }
