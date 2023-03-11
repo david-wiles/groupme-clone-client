@@ -19,9 +19,12 @@ export default function Login() {
   const method = "POST";
 
   return (
-    <div className="login-form">
+    <div id={"detail"} className="login-form">
+      <h1>
+        Login
+      </h1>
       <Form id={"login-form"}
-            className={"login-form"}
+            className={"login-form full-page"}
             method={method}
             action={action}
             inputs={[

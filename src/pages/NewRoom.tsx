@@ -19,9 +19,12 @@ export default function NewRoom() {
   };
 
   return (
-    <BaseLayout>
+    <BaseLayout title={"Create Room"}>
+      <h1>
+        Create a New Room
+      </h1>
       <Form id={"new-room"}
-            className={"new-room-form"}
+            className={"full-page new-room-form"}
             action={"/room"}
             method={"POST"}
             inputs={[

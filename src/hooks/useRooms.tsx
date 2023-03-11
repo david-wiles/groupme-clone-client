@@ -16,7 +16,7 @@ const RoomContext = createContext<UseRooms>({
 });
 
 // @ts-ignore
-export function RoomProvider({children}) {
+export function RoomProvider({children}: React.PropsWithChildren<any>) {
   const [rooms, setRooms] = useState<Array<RoomResponse>>([]);
 
   return <RoomContext.Provider value={{

@@ -24,7 +24,7 @@ export default function JoinRoom() {
   }, []);
 
   return (
-    <BaseLayout>
+    <BaseLayout title={"Join Room"}>
       <div>
         <p>
           {status}

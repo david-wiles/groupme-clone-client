@@ -2,22 +2,25 @@ import {ProtectedRoute} from "../components/ProtectedRoute";
 import RoomList from "../components/RoomList";
 import MobileNav from "../components/MobileNav";
 
+interface LayoutProps {
+  title: string
+}
+
 // @ts-ignore
-export default function BaseLayout({children}) {
+export default function BaseLayout(props: React.PropsWithChildren<LayoutProps>) {
   return (
     <ProtectedRoute>
       <div className={"app-container"}>
         <div className={"desktop-only"}>
-          <div id="sidebar">
-            <h1>Chat Rooms</h1>
+          <div id="sidebar" className={"room-list"}>
             <RoomList/>
           </div>
         </div>
         <div className={"mobile-only"}>
-          <MobileNav/>
+          <MobileNav title={props.title}/>
         </div>
         <div id="detail">
-          {children}
+          {props.children}
         </div>
       </div>
     </ProtectedRoute>

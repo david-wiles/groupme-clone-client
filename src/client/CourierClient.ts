@@ -73,10 +73,10 @@ class MessageRestClient extends RestClient {
   }
 
   async sendMessage(req: { message: string, roomId: string }) {
-    const resp = await this.fetch("GET", "/message", JSON.stringify(req))
+    const resp = await this.fetch("POST", "/message", JSON.stringify(req))
     let body: MessageResponse = await resp.json()
     this.mergeMessages([body]);
-    // courier.triggerMessage(body);
+    this.triggerMessage(body);
   }
 
   mergeMessages(messages: Array<MessageResponse>) {
@@ -133,8 +133,29 @@ class RoomRestClient extends RestClient {
     return room;
   }
 
+  async get(id: string): Promise<RoomResponse> {
+    let resp = await this.fetch("GET", `/room/${id}`);
+
+    if (!resp.ok) {
+      throw new Error(resp.statusText);
+    }
+
+    let room: RoomResponse = await resp.json();
+
+    this.rooms.set(room.id, room);
+    return room;
+  }
+
   listCached(): Array<RoomResponse> {
     return Array.from(this.rooms.values());
+  }
+
+  async getOrFetch(id: string): Promise<RoomResponse> {
+    let room = this.rooms.get(id);
+    if (!room) {
+      room = await this.get(id);
+    }
+    return room;
   }
 }
 

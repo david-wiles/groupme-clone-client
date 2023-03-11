@@ -19,9 +19,12 @@ export default function Register() {
   const [email, setEmail] = useState("");
 
   return (
-    <div className="login-form">
+    <div id={"detail"} className="login-form">
+      <h1>
+        Sign Up
+      </h1>
       <Form id={"register-form"}
-            className={"login-form"}
+            className={"login-form full-page"}
             method={method}
             action={action}
             inputs={[

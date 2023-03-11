@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useParams} from 'react-router-dom';
 import {useClient} from "../hooks/useClient";
 import ChatMessages from "../components/ChatMessages";
@@ -10,6 +10,7 @@ export default function ChatRoom() {
   const {id} = useParams();
 
   const [text, setText] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
 
   const messagesEndRef: React.Ref<any> = useRef(null);
 
@@ -19,10 +20,15 @@ export default function ChatRoom() {
     setText("");
   };
 
+  useEffect(() => {
+    courier.rooms.getOrFetch(id || "").then(room => setTitle(room.name))
+  }, []);
+
   return (
-    <BaseLayout>
+    <BaseLayout title={title}>
       <div className={"Chat"}>
         <ChatMessages scrollToBottom={scrollToBottom}/>
+        <div ref={messagesEndRef} className={"chat-bottom"}></div>
         <div className={"text-container"}>
           <Form id={"message-input-" + id}
                 className={"message-form"}
@@ -50,7 +56,6 @@ export default function ChatRoom() {
                 }
                 afterSubmit={afterSubmit}/>
         </div>
-        <div ref={messagesEndRef}></div>
       </div>
     </BaseLayout>
 

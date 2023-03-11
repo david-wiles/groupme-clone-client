@@ -1,11 +1,14 @@
 import {useLocation} from "react-router-dom";
 
-export default function MobileNav() {
+interface MobileNavProps {
+  title: string
+}
+
+export default function MobileNav(props: MobileNavProps) {
   const location = useLocation()
 
   return (
     <div className={"banner"}>
-      <h1>Page Title</h1>
       <nav className={"mobile-nav"}>
         {
           location.pathname !== '/' ?

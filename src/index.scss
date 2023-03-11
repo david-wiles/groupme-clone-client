@@ -109,12 +109,21 @@ form[action$="destroy"] {
   width: 100%;
 }
 
-#sidebar {
+.room-list {
   width: 22rem;
   background-color: #f7f7f7;
   border-right: solid 1px #e3e3e3;
   display: flex;
   flex-direction: column;
+
+  &.mobile-only {
+    width: 100%;
+
+    nav {
+      padding-top: 0;
+    }
+  }
+
   >* {
     padding-left: 2rem;
     padding-right: 2rem;
@@ -205,8 +214,10 @@ form[action$="destroy"] {
   }
   li {
     margin: 0.25rem 0;
+    border-bottom: solid 1px lightgray;
   }
 }
+
 #search-spinner {
   width: 1rem;
   height: 1rem;
@@ -219,9 +230,35 @@ form[action$="destroy"] {
 i {
   color: #818181;
 }
+
 #detail {
   width: 100%;
+
+  h1 {
+    width: 100%;
+    text-align: center;
+  }
+
+  form.full-page {
+    padding: 5px 50px 50px;
+
+    .form-group {
+      padding: 15px 0;
+      label {
+        text-transform: capitalize;
+        padding: 5px 0;
+      }
+      input {
+        width: 100%;
+      }
+    }
+
+    button[type="submit"] {
+      width: 100%;
+    }
+  }
 }
+
 #detail.loading {
   opacity: 0.25;
   transition: opacity 200ms;
@@ -286,6 +323,28 @@ i {
   padding-right: 0;
 }
 
+.text-container {
+  position: fixed;
+  bottom: 0;
+  background-color: white;
+  width: 100%;
+  border-top: 1px solid lightgray;
+
+  .message-form {
+    display: flex;
+    flex-direction: row;
+    padding: 15px;
+
+    .form-group {
+      padding-right: 10px;
+    }
+
+    label {
+      display: none;
+    }
+  }
+}
+
 .clear {
   height: 10px;
   width: 100%;
@@ -323,6 +382,24 @@ i {
     text-align: center;
     padding-right: 56px;
   }
+}
+
+.mobile-nav {
+  min-width: 56px;
+}
+
+.chat-bottom {
+  margin-bottom: 80px;
+}
+
+.mobile-room-list {
+  li {
+    list-style: none;
+  }
+}
+
+.register-link {
+  text-align: center;
 }
 
 @media (max-width: 845px) {
