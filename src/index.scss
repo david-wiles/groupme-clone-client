@@ -133,6 +133,10 @@ form[action$="destroy"] {
   display: flex;
   flex-direction: column;
 
+  .room-ops {
+    flex-direction: row-reverse;
+  }
+
   &.mobile-only {
     width: 100%;
 
@@ -329,14 +333,50 @@ i {
   width: 100%;
 }
 
+
+
 .Chat {
   text-align: left;
   overflow-y: scroll;
   transition: opacity 0.25s linear;
   max-height: 100vh;
 
+  .chat-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    border-bottom: 1px solid lightgray;
+    background-color: white;
+  }
+
+  .chat-top {
+    margin-bottom: 41px;
+  }
+
   &.hidden {
     opacity: 0;
+  }
+
+  .text-container {
+    position: fixed;
+    bottom: 0;
+    background-color: white;
+    width: 100%;
+    border-top: 1px solid lightgray;
+
+    .message-form {
+      display: flex;
+      flex-direction: row;
+      padding: 15px;
+
+      .form-group {
+        padding-right: 10px;
+      }
+
+      label {
+        display: none;
+      }
+    }
   }
 }
 
@@ -368,28 +408,6 @@ i {
       background: cornflowerblue;
       color: white;
       padding-right: 0;
-    }
-  }
-}
-
-.text-container {
-  position: fixed;
-  bottom: 0;
-  background-color: white;
-  width: 100%;
-  border-top: 1px solid lightgray;
-
-  .message-form {
-    display: flex;
-    flex-direction: row;
-    padding: 15px;
-
-    .form-group {
-      padding-right: 10px;
-    }
-
-    label {
-      display: none;
     }
   }
 }
@@ -458,6 +476,10 @@ i {
   .mobile-only {
     display: flex;
   }
+  .mobile-none {
+    display: none;
+    opacity: 0;
+  }
   .app-container {
     display: block;
   }
@@ -466,6 +488,53 @@ i {
   }
   .Chat {
     max-height: unset;
+
+    .chat-header {
+      margin-top: 73px;
+    }
+  }
+
+  .room-list {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    transition: opacity 0.25s linear;
+    z-index: 1;
+
+    nav.open {
+      display: unset;
+      opacity: 1;
+    }
+  }
+
+  .hamburger-container {
+    font-size: unset;
+    box-shadow: unset;
+    background-color: transparent;
+
+    &:hover {
+      box-shadow: unset;
+    }
+
+    &:active {
+      box-shadow: unset;
+      transform: unset;
+    }
+  }
+
+  .hamburger {
+    display: flex;
+    transition: all 0.25s linear;
+
+    &.open {
+      .gg-menu {
+        transform: scale(var(--ggs, 1.5)) rotate(45deg);
+      }
+      .gg-menu::before {
+        transform: rotate(-90deg);
+        top: 0;
+      }
+    }
   }
 }
 
@@ -506,4 +575,38 @@ i {
   height: 2px;
   bottom: 10px;
   background: currentColor
+}
+
+/* menu */
+.gg-menu {
+  transform: scale(var(--ggs,1.5));
+  transition: all 0.25s linear;
+  margin: 50% auto auto auto;
+
+  /* for WebKit */
+  &.dark {
+    background: whitesmoke;
+
+    &::before {
+      background: whitesmoke;
+    }
+  }
+}
+
+.gg-menu,
+.gg-menu::before {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 3px;
+  background: black;
+  transition: all 0.25s linear;
+}
+
+.gg-menu::before {
+  content: "";
+  position: absolute;
+  top: -6px
 }

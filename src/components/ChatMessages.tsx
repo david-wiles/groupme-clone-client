@@ -25,7 +25,7 @@ export default function ChatMessages({scrollToBottom, room}: ChatMessagesProps) 
     const from = new Date();
     from.setDate(from.getDate() - 10);
 
-    courier.messages.fetchRecent(room.id, from)
+    courier.messages.list(room.id, from)
       .then((messages: Array<MessageResponse>) => setMessages(messages));
 
     room.members.forEach((id) => {

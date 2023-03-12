@@ -1,14 +1,13 @@
 import {
   AccountResponse,
-  ClientAck,
   ClientMessage,
   ListMessageResponse,
   ListRoomResponse,
-  Message, MessageRequest,
+  Message,
   MessageResponse, RoomResponse,
   WhoAmIResponse
 } from "./messages";
-import {useRooms} from "../hooks/useRooms";
+import {ClientError, InvalidArgumentError} from "./Errors";
 
 export const doRequest = async (method: string, location: string, body?: string, token?: string): Promise<Response> => {
   let headers: {[k: string]: string} = {
@@ -49,7 +48,9 @@ class MessageRestClient extends RestClient {
   private mailboxes = new Map<string, (msg: MessageResponse) => void>();
 
   onMessage(roomId: string, handler: (msg: MessageResponse) => void) {
-    this.mailboxes.set(roomId, handler);
+    if (roomId) {
+      this.mailboxes.set(roomId, handler);
+    }
   }
 
   triggerMessage(payload: MessageResponse) {
@@ -57,29 +58,33 @@ class MessageRestClient extends RestClient {
     handler?.call(handler, payload);
   }
 
-  async fetchRecent(roomId: string, from: Date, to?: Date): Promise<Array<MessageResponse>> {
-    let toStmt = to ? `&to=${to.toISOString()}` : '';
-    let resp = await this.fetch("GET", `/message?from=${from.toISOString()}&room=${roomId}${toStmt}`);
+  async list(roomId: string, from: Date, to?: Date): Promise<Array<MessageResponse>> {
+    if (roomId) {
+      let toStmt = to ? `&to=${to.toISOString()}` : '';
+      let resp = await this.fetch("GET", `/message?from=${from.toISOString()}&room=${roomId}${toStmt}`);
 
-    if (!resp.ok) {
-      console.error(resp);
-      return [];
+      if (!resp.ok) {
+        console.error(resp);
+        return [];
+      }
+
+      const body: ListMessageResponse = await resp.json();
+      this.mergeMessages(body.messages);
+
+      return Array.from(this.messages.get(roomId)?.values() || []).sort(this.sortMessages);
     }
 
-    const body: ListMessageResponse = await resp.json();
-    this.mergeMessages(body.messages);
-
-    return Array.from(this.messages.get(roomId)?.values() || []).sort(this.sortMessages);
+    throw new InvalidArgumentError("invalid room id");
   }
 
-  async sendMessage(req: { message: string, roomId: string }) {
+  async send(req: { message: string, roomId: string }) {
     const resp = await this.fetch("POST", "/message", JSON.stringify(req))
     let body: MessageResponse = await resp.json()
     this.mergeMessages([body]);
     this.triggerMessage(body);
   }
 
-  mergeMessages(messages: Array<MessageResponse>) {
+  private mergeMessages(messages: Array<MessageResponse>) {
     messages.forEach((message) => {
       if (!this.messages.has(message.roomId)) {
         this.messages.set(message.roomId, new Map<string, MessageResponse>());
@@ -101,8 +106,7 @@ class RoomRestClient extends RestClient {
     let resp = await this.fetch("GET", "/room");
 
     if (!resp.ok) {
-      console.error(resp);
-      return {rooms: []};
+      throw new ClientError(resp.status, await resp.json())
     }
 
     const body: ListRoomResponse = await resp.json();
@@ -114,51 +118,49 @@ class RoomRestClient extends RestClient {
     let resp = await this.fetch("POST", "/room", JSON.stringify({name}));
 
     if (!resp.ok) {
-      console.error(resp);
+      throw new ClientError(resp.status, await resp.json());
     }
 
     let room: RoomResponse = await resp.json();
-
     this.rooms.set(room.id, room);
     return room;
   }
 
   async join(id: string): Promise<RoomResponse> {
-    let resp = await this.fetch("POST", `/room/${id}/join`);
+    if (id) {
+      let resp = await this.fetch("POST", `/room/${id}/join`);
 
-    if (!resp.ok) {
-      throw new Error(resp.statusText);
+      if (!resp.ok) {
+        throw new ClientError(resp.status, await resp.json());
+      }
+
+      let room: RoomResponse = await resp.json();
+      this.rooms.set(room.id, room);
+      return room;
     }
 
-    let room: RoomResponse = await resp.json();
-
-    this.rooms.set(room.id, room);
-    return room;
+    throw new InvalidArgumentError("invalid room id");
   }
 
   async get(id: string): Promise<RoomResponse> {
-    let resp = await this.fetch("GET", `/room/${id}`);
+    if (id) {
+      let cached = this.rooms.get(id);
+      if (cached) {
+        return cached;
+      }
 
-    if (!resp.ok) {
-      throw new Error(resp.statusText);
+      let resp = await this.fetch("GET", `/room/${id}`);
+
+      if (!resp.ok) {
+        throw new ClientError(resp.status, await resp.json());
+      }
+
+      let room: RoomResponse = await resp.json();
+      this.rooms.set(room.id, room);
+      return room;
     }
 
-    let room: RoomResponse = await resp.json();
-
-    this.rooms.set(room.id, room);
-    return room;
-  }
-
-  listCached(): Array<RoomResponse> {
-    return Array.from(this.rooms.values());
-  }
-
-  async getOrFetch(id: string): Promise<RoomResponse> {
-    let room = this.rooms.get(id);
-    if (!room) {
-      room = await this.get(id);
-    }
-    return room;
+    throw new InvalidArgumentError("invalid room id");
   }
 }
 
@@ -167,16 +169,20 @@ class AccountRestClient extends RestClient {
   private accounts: Map<string, AccountResponse> = new Map<string, AccountResponse>();
 
   async get(id: string): Promise<AccountResponse> {
-    let resp = await this.fetch("GET", `/account/${id}`);
+    if (id) {
+      let resp = await this.fetch("GET", `/account/${id}`);
 
-    if (!resp.ok) {
-      throw new Error(resp.statusText);
+      if (!resp.ok) {
+        throw new Error(resp.statusText);
+      }
+
+      let account: AccountResponse = await resp.json();
+
+      this.accounts.set(account.id, account);
+      return account;
     }
 
-    let account: AccountResponse = await resp.json();
-
-    this.accounts.set(account.id, account);
-    return account;
+    throw new InvalidArgumentError("invalid account id");
   }
 }
 

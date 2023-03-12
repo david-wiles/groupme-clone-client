@@ -22,12 +22,22 @@ export default function ChatRoom() {
   };
 
   useEffect(() => {
-    courier.rooms.getOrFetch(id || "").then(room => setRoom(room))
+    courier.rooms.get(id || "").then(room => setRoom(room))
   }, [id]);
 
   return (
     <BaseLayout title={room?.name || ""}>
       <div className={"Chat"}>
+        <div className={"chat-header"}>
+          <button onClick={async () => await navigator.share({
+            title: "GroupMe Clone",
+            text: "Chat with me in " + room?.name,
+            url: process.env.REACT_APP_DOMAIN + "/join" + room?.id
+          })}>
+            Share
+          </button>
+        </div>
+        <div className={"chat-top"}></div>
         {
           room ?
           <ChatMessages scrollToBottom={scrollToBottom} room={room}/> :
@@ -43,7 +53,7 @@ export default function ChatRoom() {
                   {
                     displayName: "message",
                     name: "message",
-                    type: "text",
+                    type: "textarea",
                     value: text,
                     setValue: setText,
                   },
@@ -54,7 +64,7 @@ export default function ChatRoom() {
                     value: id || "",
                   }
                 ]}
-                submit={(form: FormRequestInput) => courier.messages.sendMessage({
+                submit={(form: FormRequestInput) => courier.messages.send({
                   message: form['message'],
                   roomId: form['roomId']
                 })

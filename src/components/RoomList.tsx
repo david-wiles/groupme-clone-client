@@ -8,6 +8,7 @@ export default function RoomList() {
   const {rooms, setRooms} = useRooms();
 
   const [filter, setFilter] = useState<string>("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     courier.rooms.list().then(resp => setRooms(resp.rooms));
@@ -16,14 +17,19 @@ export default function RoomList() {
   return (
     <>
       <div className={"room-ops"}>
+        <button className={"mobile-only hamburger-container"} onClick={() => setMobileMenuOpen((o) => !o)}>
+          <span id="hamburger" className={mobileMenuOpen ? "hamburger open" : "hamburger"}>
+            <i className="gg-menu"></i>
+          </span>
+        </button>
+      </div>
+      <nav className={mobileMenuOpen ? "open" : "mobile-none"}>
         <input id={"search-filter"}
                placeholder={"filter"}
                type={"search"}
                name={"room-filter-input"}
                onChange={(e) => setFilter(e.target.value)}
         />
-      </div>
-      <nav>
         <ul>
           <li>
             <Link to={"/room/new"}>+ Create New</Link>
@@ -32,12 +38,12 @@ export default function RoomList() {
             rooms
               .filter((room) => room.name.toLowerCase().includes(filter.toLowerCase()))
               .map((room) => {
-              return (
-                <li key={room.id}>
-                  <Link to={`/room/${room.id}`}>{room.name}</Link>
-                </li>
-              )
-            })
+                return (
+                  <li key={room.id}>
+                    <Link to={`/room/${room.id}`}>{room.name}</Link>
+                  </li>
+                )
+              })
           }
         </ul>
       </nav>
