@@ -45,7 +45,7 @@ class RestClient {
 
 class MessageRestClient extends RestClient {
   // Messages are mapped from roomId -> set of messages for the room
-  private messages: Map<string, Set<MessageResponse>> = new Map<string, Set<MessageResponse>>();
+  private messages: Map<string, Map<string, MessageResponse>> = new Map<string, Map<string, MessageResponse>>();
   private mailboxes = new Map<string, (msg: MessageResponse) => void>();
 
   onMessage(roomId: string, handler: (msg: MessageResponse) => void) {
@@ -57,9 +57,9 @@ class MessageRestClient extends RestClient {
     handler?.call(handler, payload);
   }
 
-  async fetchRecent(roomId: string): Promise<Array<MessageResponse>> {
-    const from = new Date("2012-12-12");
-    let resp = await this.fetch("GET", `/message?from=${from.toISOString()}&room=${roomId}`);
+  async fetchRecent(roomId: string, from: Date, to?: Date): Promise<Array<MessageResponse>> {
+    let toStmt = to ? `&to=${to.toISOString()}` : '';
+    let resp = await this.fetch("GET", `/message?from=${from.toISOString()}&room=${roomId}${toStmt}`);
 
     if (!resp.ok) {
       console.error(resp);
@@ -69,7 +69,7 @@ class MessageRestClient extends RestClient {
     const body: ListMessageResponse = await resp.json();
     this.mergeMessages(body.messages);
 
-    return Array.from(this.messages.get(roomId) || []);
+    return Array.from(this.messages.get(roomId)?.values() || []).sort(this.sortMessages);
   }
 
   async sendMessage(req: { message: string, roomId: string }) {
@@ -82,11 +82,14 @@ class MessageRestClient extends RestClient {
   mergeMessages(messages: Array<MessageResponse>) {
     messages.forEach((message) => {
       if (!this.messages.has(message.roomId)) {
-        this.messages.set(message.roomId, new Set<MessageResponse>())
+        this.messages.set(message.roomId, new Map<string, MessageResponse>());
       }
-
-      this.messages.get(message.roomId)?.add(message);
+      this.messages.get(message.roomId)?.set(message.id, message);
     })
+  }
+
+  private sortMessages(a: MessageResponse, b: MessageResponse): number {
+    return a.timestamp > b.timestamp ? 1 : a.timestamp === b.timestamp ? 0 : -1;
   }
 }
 
@@ -162,6 +165,19 @@ class RoomRestClient extends RestClient {
 class AccountRestClient extends RestClient {
   // Accounts are mapped accountId -> account
   private accounts: Map<string, AccountResponse> = new Map<string, AccountResponse>();
+
+  async get(id: string): Promise<AccountResponse> {
+    let resp = await this.fetch("GET", `/account/${id}`);
+
+    if (!resp.ok) {
+      throw new Error(resp.statusText);
+    }
+
+    let account: AccountResponse = await resp.json();
+
+    this.accounts.set(account.id, account);
+    return account;
+  }
 }
 
 class RegistrationRestClient extends RestClient {

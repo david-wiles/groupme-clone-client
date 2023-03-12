@@ -1,32 +1,37 @@
 import React, {useEffect, useState} from 'react';
-import {ListMessageResponse, MessageResponse} from "../client/messages";
-import {useParams} from 'react-router-dom';
+import {AccountResponse, MessageResponse, RoomResponse} from "../client/messages";
 import {useClient} from "../hooks/useClient";
 import {useAuth} from "../hooks/useAuth";
 import {useSubsequentEffect} from "../hooks/useSubsequentEffect";
 
 interface ChatMessagesProps {
   scrollToBottom: (opts?: ScrollIntoViewOptions) => void
+  room: RoomResponse
 }
 
-export default function ChatMessages({scrollToBottom}: ChatMessagesProps) {
+export default function ChatMessages({scrollToBottom, room}: ChatMessagesProps) {
   const {courier} = useClient();
-  const [messages, setMessages] = useState(new Array<MessageResponse>());
   const {auth} = useAuth();
-  const {id} = useParams();
 
-  const roomId = id || "";
+  const [messages, setMessages] = useState(new Array<MessageResponse>());
+  const [members, setMembers] = useState(new Map<string, AccountResponse>());
 
-  courier.messages.onMessage(roomId, (msg: MessageResponse) => {
+  courier.messages.onMessage(room.id, (msg: MessageResponse) => {
     setMessages((messages) => messages.concat(msg));
     scrollToBottom({behavior: "smooth"});
   });
 
   useEffect(() => {
-    courier.messages.fetchRecent(roomId).then((messages: Array<MessageResponse>) => {
-      setMessages(messages.reverse());
+    const from = new Date();
+    from.setDate(from.getDate() - 10);
+
+    courier.messages.fetchRecent(room.id, from)
+      .then((messages: Array<MessageResponse>) => setMessages(messages));
+
+    room.members.forEach((id) => {
+      courier.accounts.get(id).then((account) => setMembers(new Map(members.set(account.id, account))));
     });
-  }, [roomId]);
+  }, [room.id]);
 
   useSubsequentEffect(() => scrollToBottom(), [messages.length]);
 
@@ -34,12 +39,23 @@ export default function ChatMessages({scrollToBottom}: ChatMessagesProps) {
     <>
       {
         messages.map((message) => {
-          const classes = message.userId === auth.id ? "outgoingMessage messageBubble" : "incomingMessage messageBubble";
           return (
-            <p key={message.userId + message.timestamp} className={classes}>
-              {message.content}
-            </p>
-          )
+            <div className={"messageBubble"} key={message.id}>
+              {
+                message.userId === auth.id ?
+                  <p className={"outgoingMessage"}>
+                    {message.content}
+                  </p>
+                  :
+                  <>
+                    <small>{members.get(message.userId)?.username}</small>
+                    <p className={"incomingMessage"}>
+                      {message.content}
+                    </p>
+                  </>
+              }
+            </div>
+          );
         })
       }
     </>

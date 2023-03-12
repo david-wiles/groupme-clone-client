@@ -34,6 +34,7 @@ export interface ListMessageResponse {
 }
 
 export interface MessageResponse {
+  id: string
   roomId: string
   userId: string
   content: string
