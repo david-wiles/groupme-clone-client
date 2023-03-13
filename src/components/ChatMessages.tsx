@@ -28,9 +28,9 @@ export default function ChatMessages({scrollToBottom, room}: ChatMessagesProps) 
     courier.messages.list(room.id, from)
       .then((messages: Array<MessageResponse>) => setMessages(messages));
 
-    room.members.forEach((id) => {
-      courier.accounts.get(id).then((account) => setMembers(new Map(members.set(account.id, account))));
-    });
+    courier.rooms.listMembers(room.id)
+      .then((resp) => Promise.all(resp.members.map((id) => courier.accounts.get(id))))
+      .then((accounts) => accounts.forEach((account) => setMembers(new Map(members.set(account.id, account)))));
   }, [room.id]);
 
   useSubsequentEffect(() => scrollToBottom(), [messages.length]);

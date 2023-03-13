@@ -33,6 +33,10 @@ export interface ListMessageResponse {
   messages: Array<MessageResponse>
 }
 
+export interface ListMembersResponse {
+  members: Array<string>
+}
+
 export interface MessageResponse {
   id: string
   roomId: string

@@ -1,6 +1,6 @@
 import {
   AccountResponse,
-  ClientMessage,
+  ClientMessage, ListMembersResponse,
   ListMessageResponse,
   ListRoomResponse,
   Message,
@@ -114,6 +114,16 @@ class RoomRestClient extends RestClient {
     return body;
   }
 
+  async listMembers(id: string): Promise<ListMembersResponse> {
+    let resp = await this.fetch("GET", `/room/${id}/members`);
+
+    if (!resp.ok) {
+      throw new ClientError(resp.status, await resp.json())
+    }
+
+    return await resp.json();
+  }
+
   async create(name: string): Promise<RoomResponse> {
     let resp = await this.fetch("POST", "/room", JSON.stringify({name}));
 
@@ -211,7 +221,6 @@ export default class CourierClient {
   private registrationClient: RegistrationRestClient;
 
   private connection?: WebSocket;
-  private webhook?: string;
 
   constructor(token: string) {
     // @ts-ignore
@@ -223,12 +232,8 @@ export default class CourierClient {
     });
 
     this.connection.addEventListener('message', async (event: MessageEvent) => {
-      let message: Message = JSON.parse(event.data);
-      if ("webhook" in message && message.webhook) {
-        this.webhook = await this.registrationClient.handleRegister(message);
-      } else if ("payload" in message) {
-        await this.handleNotification(message)
-      }
+      let message: ClientMessage = JSON.parse(event.data);
+      await this.handleNotification(message)
     });
 
     this.messages = new MessageRestClient(token);
