@@ -126,14 +126,17 @@ form[action$="destroy"] {
   width: 100%;
 }
 
-.room-list {
+#sidebar {
   width: 22rem;
+}
+
+.link-list {
   background-color: #f7f7f7;
   border-right: solid 1px #e3e3e3;
   display: flex;
   flex-direction: column;
 
-  .room-ops {
+  .sidebar-button {
     flex-direction: row-reverse;
   }
 
@@ -172,10 +175,6 @@ form[action$="destroy"] {
   > div {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e3e3e3;
 
     form {
       position: relative;
@@ -495,9 +494,12 @@ i {
     }
   }
 
-  .room-list {
+  #sidebar {
     position: fixed;
     top: 0;
+  }
+
+  .link-list {
     width: 100%;
     transition: opacity 0.25s linear;
     z-index: 1;

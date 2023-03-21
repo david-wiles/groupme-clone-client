@@ -1,5 +1,5 @@
 import {ProtectedRoute} from "../components/ProtectedRoute";
-import RoomList from "../components/RoomList";
+import ActionList from "../components/ActionList";
 
 interface LayoutProps {
   title: string
@@ -10,9 +10,7 @@ export default function BaseLayout(props: React.PropsWithChildren<LayoutProps>) 
   return (
     <ProtectedRoute>
       <div className={"app-container"}>
-        <div id="sidebar" className={"room-list"}>
-          <RoomList/>
-        </div>
+        <ActionList/>
         <div id="detail">
           {props.children}
         </div>
